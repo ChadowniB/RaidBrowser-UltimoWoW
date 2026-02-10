@@ -1,5 +1,6 @@
 -- Register addon
 RaidBrowser = LibStub('AceAddon-3.0'):NewAddon('RaidBrowser', 'AceConsole-3.0')
+RaidBrowser.gui = RaidBrowser.gui or {}  -- ensure gui table exists
 
 --[[ Reputation system (per-character) ]]--
 RaidBrowserReputationDB = RaidBrowserReputationDB or { scores = {} }  -- sender -> integer score
@@ -138,6 +139,28 @@ local function create_quest_pattern(quest_id)
 	return "quest:" .. tostring(quest_id) .. ".+%]"
 end
 
+-- Spanish weekly helpers (safe; avoids matching unrelated "semanal" messages)
+local function weekly_es_for(raid_base)
+	-- Returns patterns that imply "weekly/semanal" for a raid, allowing 10/25 or no size.
+	-- Keep tied to raid name to avoid false positives.
+	local b = raid_base
+	return {
+		-- base + size + weekly/semanal
+		b .. csep .. '1?0?' .. csep .. 'weekly',
+		b .. csep .. '2?5?' .. csep .. 'weekly',
+		b .. csep .. 'weekly',
+		b .. csep .. '1?0?' .. csep .. 'semanal',
+		b .. csep .. '2?5?' .. csep .. 'semanal',
+		b .. csep .. 'semanal',
+
+		-- allow the weekly word anywhere near the raid tag
+		b .. non_meta .. 'semanal',
+		'semanal' .. non_meta .. b,
+		'misi[oó]n' .. csep .. 'semanal' .. non_meta .. b,
+		b .. non_meta .. 'misi[oó]n' .. csep .. 'semanal',
+	}
+end
+
 local raid_list = {
 	-- Note: The order of each raid is deliberate.
 	-- Heroic raids are checked first, since NM raids will have the default 'icc10' pattern.
@@ -218,6 +241,47 @@ local raid_list = {
 				create_achievement_pattern(4530),
 				'Fall of the Lich King %(10 player%)',
 				create_achievement_pattern(4532),
+				'pr[ií]nci?p?e?s' .. sep,
+				'prince?s?' .. sep,
+				'blood' .. csep .. 'prince?s?',
+
+				-- ICC boss aliases (Spanish / slang)
+				'tu[eé]tano' .. sep,
+				'marowgar' .. sep,
+				'se[ñn]ora' .. csep .. 'susurros' .. sep,
+				'lady' .. sep,
+				'susurros' .. sep,
+
+				'barco' .. sep,
+				'barcos' .. sep,
+				'gunship' .. sep,
+				'naves' .. sep,
+
+				'libra' .. sep,
+				'c[aá]non' .. sep,
+
+				'carap[uú]tria' .. sep,
+				'putri' .. sep,
+				'putricide' .. sep,
+				'profesor' .. csep .. 'putricide' .. sep,
+
+				'pansa' .. sep,
+				'festergut' .. sep,
+				'carapanz[aá]' .. sep,
+				'rotface' .. sep,
+
+				'sangre' .. csep .. 'reina' .. sep,
+				'lana?thel' .. sep,
+				'bql' .. sep,
+
+				'sindra' .. sep,
+				'sindragosa' .. sep,
+				'sindr[aá]' .. sep,
+
+				'rey' .. csep .. 'ex[aá]nime' .. sep,
+				'lich' .. csep .. 'king' .. sep,
+				'arthas' .. sep,
+				'[^a-z]lk[^a-z]',
 			}
 		)
 	},
@@ -235,21 +299,88 @@ local raid_list = {
 				create_achievement_pattern(4597),
 				'Fall of the Lich King %(25 player%)',
 				create_achievement_pattern(4608),
+				'pr[ií]nci?p?e?s' .. sep,
+				'prince?s?' .. sep,
+				'blood' .. csep .. 'prince?s?',
+
+				-- ICC boss aliases (Spanish / slang)
+				'tu[eé]tano' .. sep,
+				'marowgar' .. sep,
+				'se[ñn]ora' .. csep .. 'susurros' .. sep,
+				'lady' .. sep,
+				'susurros' .. sep,
+
+				'barco' .. sep,
+				'barcos' .. sep,
+				'gunship' .. sep,
+				'naves' .. sep,
+
+				'libra' .. sep,
+				'c[aá]non' .. sep,
+
+				'carap[uú]tria' .. sep,
+				'profe' .. sep,
+				'putri' .. sep,
+				'putricide' .. sep,
+				'profesor' .. csep .. 'putricide' .. sep,
+
+				'pansa' .. sep,
+				'festergut' .. sep,
+				'carapanz[aá]' .. sep,
+				'rotface' .. sep,
+
+				'sangre' .. csep .. 'reina' .. sep,
+				'lana?thel' .. sep,
+				'bql' .. sep,
+
+				'sindra' .. sep,
+				'sindragosa' .. sep,
+				'sindr[aá]' .. sep,
+
+				'rey' .. csep .. 'ex[aá]nime' .. sep,
+				'lich' .. csep .. 'king' .. sep,
+				'arthas' .. sep,
+				'[^a-z]lk[^a-z]',
 			}
 		)
 	},
 
+	-- =========================
+	-- WEEKLY QUESTS (PRO MODE)
+	-- =========================
 	{
-		name = 'icc10wq',
-		prioritized = true,
-		instance_name = 'ICC',
-		size = 10,
-		patterns = {
-			'icc1?0?' .. csep .. 'weekly',
-			'Lord Marrowgar' .. wtext .. '[!%]]',
-			create_quest_pattern(24590),
-		},
-	},
+  name = 'iccwq',
+  prioritized = true,
+		weekly = true,
+  instance_name = 'SEMANAL ICC',
+  size = 10, -- display only (doesn’t break anything)
+  patterns = {
+
+			-- Weekly / Semanal triggers (EN/ES)
+			'icc' .. csep .. '10' .. csep .. 'semanal',
+			'icc' .. csep .. '25' .. csep .. 'semanal',
+			'icc' .. csep .. 'semanal',
+			'semanal' .. csep .. 'icc',
+			'icc' .. csep .. '10' .. csep .. 'weekly',
+			'icc' .. csep .. '25' .. csep .. 'weekly',
+			'icc' .. csep .. 'weekly',
+			'weekly' .. csep .. 'icc',
+			    -- English weekly triggers
+    'icc' .. csep .. 'weekly',
+    'weekly' .. csep .. 'icc',
+
+    -- Spanish weekly triggers
+    'icc' .. csep .. 'semanal',
+    'semanal' .. csep .. 'icc',
+    'misi[oó]n' .. csep .. 'semanal' .. non_meta .. 'icc',
+    'icc' .. non_meta .. 'misi[oó]n' .. csep .. 'semanal',
+
+    -- Hard-evidence triggers (quest link / boss from quest)
+    'Lord Marrowgar' .. wtext .. '[!%]]',
+    create_quest_pattern(24590),
+  },
+},
+
 
 	{
 		name = 'toc10hc',
@@ -261,7 +392,7 @@ local raid_list = {
 				'togc' .. csep .. '10',
 				'Call of the Grand Crusade %(10 player%)',
 				create_achievement_pattern(3918),
-			}-- Trial of the grand crusader (togc) refers to heroic toc
+			}
 		),
 	},
 
@@ -275,7 +406,7 @@ local raid_list = {
 				'togc' .. csep .. '25',
 				'Call of the Grand Crusade %(25 player%)',
 				create_achievement_pattern(3812),
-			}-- Trial of the grand crusader (togc) refers to heroic toc
+			}
 		),
 	},
 
@@ -308,13 +439,16 @@ local raid_list = {
 	{
 		name = 'toc10wq',
 		prioritized = true,
-		instance_name = 'TOC',
+		weekly = true,
+		instance_name = 'SEMANAL TOC',
 		size = 10,
-		patterns = {
-			'tog?c1?0?' .. csep .. 'weekly',
-			'Lord Jaraxxus' .. wtext .. '[!%]]',
-			create_quest_pattern(24589),
-		},
+		patterns = std.algorithm.copy_back(
+			weekly_es_for('tog?c'),
+			{
+				'Lord Jaraxxus' .. wtext .. '[!%]]',
+				create_quest_pattern(24589),
+			}
+		),
 	},
 
 	-- =========================
@@ -391,7 +525,6 @@ local raid_list = {
 		patterns = std.algorithm.copy_back(
 			create_pattern_from_template('rs', 10, 'hc'),
 			{
-				-- allow people to write SR too
 				'sr' .. sep,
 				'ruby' .. csep .. 'sanctum' .. csep .. '10' .. wtext .. 'hc',
 				'Heroic: The Twilight Destroyer %(10 player%)',
@@ -488,19 +621,22 @@ local raid_list = {
 	{
 		name = 'ulduar10wq',
 		prioritized = true,
-		instance_name = 'ULD',
+		weekly = true,
+		instance_name = 'SEMANAL ULD',
 		size = 10,
-		patterns = {
-			'ull?a?d[au]?[au]?r?1?0?' .. csep .. 'weekly',
-			'Flame Leviathan' .. wtext .. '[!%]]',
-			create_quest_pattern(24585),
-			'Ignis' .. wtext .. '[!%]]',
-			create_quest_pattern(24587),
-			'Razorscale' .. wtext .. '[!%]]',
-			create_quest_pattern(24586),
-			'XT-002' .. wtext .. '[!%]]',
-			create_quest_pattern(24588),
-		},
+		patterns = std.algorithm.copy_back(
+			weekly_es_for('ull?a?d[au]?[au]?r?'),
+			{
+				'Flame Leviathan' .. wtext .. '[!%]]',
+				create_quest_pattern(24585),
+				'Ignis' .. wtext .. '[!%]]',
+				create_quest_pattern(24587),
+				'Razorscale' .. wtext .. '[!%]]',
+				create_quest_pattern(24586),
+				'XT-002' .. wtext .. '[!%]]',
+				create_quest_pattern(24588),
+			}
+		),
 	},
 
 	{
@@ -532,13 +668,16 @@ local raid_list = {
 	{
 		name = 'os10wq',
 		prioritized = true,
-		instance_name = 'SO',
+		weekly = true,
+		instance_name = 'SEMANAL SO',
 		size = 10,
-		patterns = {
-			'os1?0?' .. csep .. 'weekly',
-			'Sartharion' .. wtext .. '[!%]]',
-			create_quest_pattern(24579),
-		}
+		patterns = std.algorithm.copy_back(
+			weekly_es_for('os'),
+			{
+				'Sartharion' .. wtext .. '[!%]]',
+				create_quest_pattern(24579),
+			}
+		),
 	},
 
 	{
@@ -568,19 +707,22 @@ local raid_list = {
 	{
 		name = 'naxx10wq',
 		prioritized = true,
-		instance_name = 'NAXX',
+		weekly = true,
+		instance_name = 'SEMANAL NAXX',
 		size = 10,
-		patterns = {
-			'naxx?1?0?' .. csep .. 'weekly',
-			'Anub\'Rekhan' .. wtext .. '[!%]]',
-			create_quest_pattern(24580),
-			'Noth' .. wtext .. '[!%]]',
-			create_quest_pattern(24581),
-			'Razuvious' .. wtext .. '[!%]]',
-			create_quest_pattern(24582),
-			'Patchwerk' .. wtext .. '[!%]]',
-			create_quest_pattern(24583),
-		},
+		patterns = std.algorithm.copy_back(
+			weekly_es_for('naxx?'),
+			{
+				'Anub\'Rekhan' .. wtext .. '[!%]]',
+				create_quest_pattern(24580),
+				'Noth' .. wtext .. '[!%]]',
+				create_quest_pattern(24581),
+				'Razuvious' .. wtext .. '[!%]]',
+				create_quest_pattern(24582),
+				'Patchwerk' .. wtext .. '[!%]]',
+				create_quest_pattern(24583),
+			}
+		),
 	},
 
 	{
@@ -594,6 +736,9 @@ local raid_list = {
 				'eoe' .. csep .. '25',
 				'A Poke In The Eye %(25 player%)',
 				create_achievement_pattern(1870),
+				'el' .. csep .. 'ojo' .. sep,
+				'ojo' .. csep .. 'de' .. csep .. 'la' .. csep .. 'eternidad',
+				'ojo' .. sep,
 			}
 		),
 	},
@@ -609,6 +754,9 @@ local raid_list = {
 				'eoe',
 				'A Poke In The Eye %(10 player%)',
 				create_achievement_pattern(1869),
+				'el' .. csep .. 'ojo' .. sep,
+				'ojo' .. csep .. 'de' .. csep .. 'la' .. csep .. 'eternidad',
+				'ojo' .. sep,
 			}
 		),
 	},
@@ -616,13 +764,16 @@ local raid_list = {
 	{
 		name = 'eoe10wq',
 		prioritized = true,
-		instance_name = 'EOE',
+		weekly = true,
+		instance_name = 'SEMANAL EOE',
 		size = 10,
-		patterns = {
-			'eoe1?0?' .. csep .. 'weekly',
-			'Malygos' .. wtext .. '[!%]]',
-			create_quest_pattern(24584),
-		},
+		patterns = std.algorithm.copy_back(
+			weekly_es_for('eoe'),
+			{
+				'Malygos' .. wtext .. '[!%]]',
+				create_quest_pattern(24584),
+			}
+		),
 	},
 
 	{
@@ -843,7 +994,7 @@ local role_patterns = {
 		role_sep .. 'mdps' .. role_sep,
 		role_sep .. 'm' .. csep .. 'dps' .. role_sep,
 
-		role_sep .. 'range' .. role_sep,     -- avoid "strange" via role_sep boundaries
+		role_sep .. 'range' .. role_sep,
 		role_sep .. 'ranged' .. role_sep,
 		'^ranged' .. role_sep,
 		role_sep .. 'rdps' .. role_sep,
@@ -854,14 +1005,14 @@ local role_patterns = {
 		role_sep .. 'cast' .. role_sep,
 
 		-- Spanish common
-		role_sep .. 'mel[eé]' .. role_sep,              -- "mele"/"melé"
-		role_sep .. 'cuerpo' .. csep .. 'a' .. csep .. 'cuerpo' .. role_sep, -- "cuerpo a cuerpo"
+		role_sep .. 'mel[eé]' .. role_sep,
+		role_sep .. 'cuerpo' .. csep .. 'a' .. csep .. 'cuerpo' .. role_sep,
 		role_sep .. 'rango' .. role_sep,
-		role_sep .. 'dist' .. csep .. 'ancia' .. role_sep, -- distancia
+		role_sep .. 'dist' .. csep .. 'ancia' .. role_sep,
 		role_sep .. 'distancia' .. role_sep,
 		role_sep .. 'rango' .. csep .. 'dps' .. role_sep,
-		role_sep .. 'magos?' .. role_sep,               -- sometimes "mago" used as role request
-		role_sep .. 'caz?a' .. role_sep,                -- "caza" (hunter) shorthand
+		role_sep .. 'magos?' .. role_sep,
+		role_sep .. 'caz?a' .. role_sep,
 
 		-- Original short forms
 		'm[dp][dp]s' .. meta_or_sep,
@@ -871,15 +1022,15 @@ local role_patterns = {
 
 	healer = {
 		-- Generic healer keywords (EN/ES)
-		'he?a?l+e?r?s?' .. meta_or_sep, -- healer / healers
-		'he?a?l+z?' .. meta_or_sep,     -- healz
+		'he?a?l+e?r?s?' .. meta_or_sep,
+		'he?a?l+z?' .. meta_or_sep,
 		role_sep .. 'heal' .. role_sep,
 		'^heal' .. role_sep,
 		'heler',
 
 		-- Spanish healer words
 		role_sep .. 'healear' .. role_sep,
-		role_sep .. 'curas?' .. role_sep,          -- cura/curas
+		role_sep .. 'curas?' .. role_sep,
 		role_sep .. 'curar' .. role_sep,
 		role_sep .. 'curandero' .. role_sep,
 		role_sep .. 'sanador' .. role_sep,
@@ -897,24 +1048,24 @@ local role_patterns = {
 		'cham[aá]n' .. csep .. 'restauraci[oó]n' .. meta_or_sep,
 
 		-- Resto Druid
-		're?s?t?o?' .. csep .. 'd[ru][ud][iu]d?', -- LF rdruid/rdudu
-		meta_or_sep .. 'r' .. csep .. 'd[ru][ud][iu]d?', -- LF rdruid/rdudu
-		'tree', -- LF tree
+		're?s?t?o?' .. csep .. 'd[ru][ud][iu]d?',
+		meta_or_sep .. 'r' .. csep .. 'd[ru][ud][iu]d?',
+		'tree',
 
 		-- Resto Shaman
-		're?s?t?o?' .. csep .. 'shamm?y?', -- LF rsham
-		meta_or_sep .. 'r' .. csep .. 'shamm?y?', -- LF rsham
+		're?s?t?o?' .. csep .. 'shamm?y?',
+		meta_or_sep .. 'r' .. csep .. 'shamm?y?',
 
 		-- Priest heals
 		'disco?[^a-z]',
-		'dpri?e?st[^a-z]', -- disc priest
-		meta_or_sep .. 'd' .. csep .. 'pri?e?st', -- disc priest
+		'dpri?e?st[^a-z]',
+		meta_or_sep .. 'd' .. csep .. 'pri?e?st',
 		role_sep .. 'hpri?e?st' .. role_sep,
 		role_sep .. 'holy' .. csep .. 'pri?e?st' .. role_sep,
 
 		-- Holy Paladin
-		'ho?l?l?y?' .. csep .. 'pala?d?i?n?', -- LF holy pala
-		meta_or_sep .. 'h' .. csep .. 'pala?d?i?n?', -- LF hpala
+		'ho?l?l?y?' .. csep .. 'pala?d?i?n?',
+		meta_or_sep .. 'h' .. csep .. 'pala?d?i?n?',
 
 		-- Common shorthand people use on Spanish servers
 		role_sep .. 'hpala' .. role_sep,
@@ -926,13 +1077,23 @@ local role_patterns = {
 	},
 
 	tank = {
-		role_sep .. '[mo]t' .. role_sep, -- Need MT/OT
-		role_sep .. '[mo]t' .. csep .. '$', -- Need MT/OT
-		'ta*n+a?k+s?', -- NEED TANKS
+		role_sep .. '[mo]t' .. role_sep,
+		role_sep .. '[mo]t' .. csep .. '$',
+
+		'ta*n+a?k+s?',
 		'b[ea][ea]+rs?',
-		'prote?c?t?i?o?n?', -- NEED PROT PALA/WARRI
+		'prote?c?t?i?o?n?',
+
+		-- Spanish / common private-server slang
+		role_sep .. 'tanques?' .. role_sep,
+		'tanq' .. meta_or_sep,
+		'tanke?s?' .. meta_or_sep,
+		'tanque?s?' .. meta_or_sep,
+		'[^a-z]ot[^a-z]',
+		'[^a-z]mt[^a-z]',
 	},
 }
+
 local gearscore_patterns = {
 	'[1-6].?[0-9]?kgs',
 	'[1-6]' .. csep .. 'k[0-9]+',
@@ -948,9 +1109,9 @@ local guild_recruitment_patterns = {
 	'recrui?ti?n?g?',
 	'we' .. csep .. 'raid',
 	'we' .. csep .. 'are' .. csep .. 'raidi?n?g?',
-	'[<({-][%a%s]+[-})>]' .. csep .. 'is' .. csep .. 'a?', -- (<GuildName> is a) pve guild looking for
+	'[<({-][%a%s]+[-})>]' .. csep .. 'is' .. csep .. 'a?',
 	'is' .. csep .. '[%a%s]*playe?rs?',
-	'[0-9][0-9][pa]m' .. csep .. 'st', -- we raid (12pm set)
+	'[0-9][0-9][pa]m' .. csep .. 'st',
 	'autorecruit',
 	'raid' .. csep .. 'time',
 	'active' .. csep .. 'raiders?',
@@ -986,6 +1147,15 @@ local rolelist_patterns = {
 
 local lfm_patterns = {
 	lfm .. non_meta .. meta_role .. non_meta .. meta_raid,
+
+	-- Spanish / common formats (UltimoWoW)
+	'[0-9]+' .. non_meta .. meta_role .. non_meta .. meta_raid,
+	meta_role .. non_meta .. 'por' .. non_meta .. meta_raid,
+	meta_role .. non_meta .. 'para' .. non_meta .. meta_raid,
+	meta_role .. non_meta .. sep .. 'x' .. sep .. non_meta .. meta_raid,
+	meta_raid .. non_meta .. 'busc' .. non_meta .. meta_role,
+	meta_raid .. non_meta .. 'necesit' .. non_meta .. meta_role,
+	meta_raid .. non_meta .. 'falt' .. non_meta .. meta_role,
 
 	meta_raid .. non_meta .. sep .. '[0-9]+' .. non_meta .. meta_role,
 
@@ -1082,20 +1252,19 @@ local function is_guild_recruitment(message, debug)
 	end
 
 	-- If the message clearly looks like someone forming a group (LFM/LFG), do NOT treat it as recruitment.
-	-- This prevents false negatives like: "Guild run LFM ICC 25H need heal"
 	local lfm_intent_patterns = {
 		'lfm' .. sep,
-		'lf' .. sep,          -- "lf tank"
+		'lf' .. sep,
 		'need' .. sep,
 		'looking' .. csep .. 'for',
-		'busc' .. sep,        -- "busco/buscamos"
-		'necesit' .. sep,     -- "necesito/necesitamos"
-		'falta' .. sep,       -- "falta/faltan"
+		'busc' .. sep,
+		'necesit' .. sep,
+		'falta' .. sep,
 		'faltan' .. sep,
-		'inv' .. sep,         -- invite
+		'inv' .. sep,
 		'invite' .. sep,
-		'invita' .. sep,      -- Spanish invite
-		'para' .. csep .. meta_raid, -- "para icc"
+		'invita' .. sep,
+		'para' .. csep .. meta_raid,
 	}
 	if matches_any_pattern(message, lfm_intent_patterns, false) then
 		return false
@@ -1174,20 +1343,15 @@ end
 ---@return string
 ---@nodiscard
 local function format_gs_string(gs_str)
-	local formatted = gs_str:gsub(sep .. '*%+?', ''); -- Trim whitespace
+	local formatted = gs_str:gsub(sep .. '*%+?', '');
 	formatted = formatted:gsub('[kgs]', '')
 	formatted = formatted:gsub(sep, '.');
 	local gs = tonumber(formatted);
 
-	-- Convert ex: 5800 into 5.8 for display
 	if gs > 1000 then
 		gs = gs / 1000;
-
-		-- Convert 57.0 into 5.7
 	elseif gs > 100 then
 		gs = gs / 100;
-
-		-- Convert 57.0 into 5.7
 	elseif gs > 10 then
 		gs = gs / 10;
 	end
@@ -1202,9 +1366,7 @@ local function lex_gs_req(message)
 	for _, pattern in pairs(gearscore_patterns) do
 		local gs_text = message:match(pattern);
 		if gs_text then
-			-- Extract gs and replace it with the gearscore nonterminal
 			return format_gs_string(gs_text),
-				-- TODO: Check for valid pattern
 				message:gsub(gs_text, meta_gs)
 		end
 	end
@@ -1242,7 +1404,6 @@ function RaidBrowser.lex_raid_info(message, debug)
 		end);
 
 		if index then
-			-- only count as new unique raid, if previously found raid was a different zone
 			if not raid or (RaidBrowser.get_short_raid_name(r.name) ~= RaidBrowser.get_short_raid_name(raid.name)) then
 				num_unique_raids = num_unique_raids + 1;
 				if debug and raid then
@@ -1250,7 +1411,6 @@ function RaidBrowser.lex_raid_info(message, debug)
 				end
 			end
 
-			-- overwrite raid choice only if new raid is prioritized or found earlier in message (as people post hc achievements after declaring nm)
 			if (raid_pattern_index == nil or (raid and r.prioritized and not raid.prioritized) or raid_pattern_index > message_index) then
 				raid_pattern_index = message_index
 				raid = r;
@@ -1297,28 +1457,23 @@ function RaidBrowser.lex_and_extract(message, debug)
 	message = message:lower();
 	message = remove_http_links(message);
 
-	-- Stop if it's a guild recruit/wts message
 	if is_guild_recruitment(message) or is_trade_message(message) then
 		return;
 	end
 
-	-- Remove any instances of the meta character
 	message = message:gsub(meta_char, '');
 
 	message = lex_guild_recruitments(message);
 
-	-- Get the raid_info from the message
 	local raid_info, raid_lexed_message, num_unique_raids = RaidBrowser.lex_raid_info(message, debug);
 	if not raid_info or not raid_lexed_message or not num_unique_raids then return end
 
 	if has_guild_recruitment_production(raid_lexed_message) then return end
 
-	-- If there are multiple distinct raids, then it is most likely a recruitment message.
 	if num_unique_raids > 1 then return end
 
 	raid_lexed_message = lex_achievements(raid_lexed_message);
 
-	-- Get any roles that are needed
 	local roles = {};
 
 	if not raid_lexed_message:find('lfm? all ') and not raid_lexed_message:find('nee?d all ') then
@@ -1327,12 +1482,10 @@ function RaidBrowser.lex_and_extract(message, debug)
 		roles, raid_lexed_message = lex_roles(roles, raid_lexed_message, 'healer', debug);
 	end
 
-	-- If there is only an LFM message, then it is assumed that all roles are needed
 	if #roles == 0 then
 		roles = { 'dps', 'tank', 'healer' }
 	end
 
-	-- Search for a gearscore requirement.
 	local gs, gs_lexed_message = lex_gs_req(raid_lexed_message);
 	gs_lexed_message = reduce_rolelists(gs_lexed_message);
 
@@ -1347,10 +1500,8 @@ function RaidBrowser.raid_info(message, debug)
 
 	if not lexed_message then return end
 
-	-- Any message that is lexed out to be an lfg is excluded (unfortunately near the end).
 	if is_lfg_message(lexed_message, debug) then return end
 
-	-- Parse symbols to determine if the message is valid
 	if not is_lfm_message(lexed_message, debug) then return end
 
 	return raid_info, roles, gs or ' ';
@@ -1385,7 +1536,6 @@ local function event_handler(self, event, message, sender)
 		local raid_info, roles, gs = RaidBrowser.raid_info(message)
 		if raid_info and roles and gs then
 
-			-- Put the sender in the table of active raids
 			RaidBrowser.lfm_messages[sender] = {
 				raid_info = raid_info,
 				roles = roles,
@@ -1395,19 +1545,15 @@ local function event_handler(self, event, message, sender)
 				sender = sender
 			};
 
-			RaidBrowser.gui.update_list();
+			if RaidBrowser.gui and RaidBrowser.gui.update_list then RaidBrowser.gui.update_list() end
 		end
 	end
 end
 
 local function refresh_lfm_messages()
-	-- Requesting lock info each time a tooltip is produced creates a lot of lag.
-	-- This is a better alternative
 	RequestRaidInfo();
 
 	for name, info in pairs(RaidBrowser.lfm_messages) do
-		-- If the last message from the sender was too long ago, then
-		-- remove his raid from lfm_messages.
 		if time() - info.time > RaidBrowser.expiry_time then
 			RaidBrowser.lfm_messages[name] = nil;
 		end

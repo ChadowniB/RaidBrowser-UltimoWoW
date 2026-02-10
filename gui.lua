@@ -394,9 +394,46 @@ local function assign_lfr_button(button, host_name, lfm_info, index)
 
 	button.name:SetText(host_name)
 	button.level:SetText(button.lfm_info.gs or " ")
-	button.class:SetText(button.raid_info.instance_name or button.raid_info.name or " ")
+	-- Instance display
+local inst_text = (button.raid_info and (button.raid_info.instance_name or button.raid_info.name)) or " "
+-- Weekly/Semanal display: show coin before raid name
+local inst_text = button.raid_info and (button.raid_info.instance_name or button.raid_info.name) or ""
+local msg_text  = button.lfm_info and button.lfm_info.message or ""
 
-	if not button.modeText then
+local is_weekly =
+    (inst_text and inst_text:find("^SEMANAL")) or
+    (button.raid_info and button.raid_info.weekly) or
+    (msg_text and (msg_text:lower():find("semanal") or msg_text:lower():find("weekly")))
+
+local short = inst_text or ""
+short = short:gsub("^SEMANAL%s*", "") -- remove prefix if present
+
+if is_weekly then
+    -- Small padding so coin doesn't overlap text
+    button.class:SetText("   " .. short)
+
+    if not button.semanalCoin then
+        button.semanalCoin = button:CreateTexture(nil, "OVERLAY")
+        button.semanalCoin:SetSize(16, 16)
+        button.semanalCoin:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
+    end
+
+    button.semanalCoin:ClearAllPoints()
+    button.semanalCoin:SetPoint("LEFT", button.class, "LEFT", -8, 0)
+    button.semanalCoin:Show()
+else
+    button.class:SetText(inst_text)
+    if button.semanalCoin then button.semanalCoin:Hide() end
+end
+
+-- hide any old icon textures if they exist (from previous versions)
+if button.weeklyCoin then button.weeklyCoin:Hide() end
+if button.semCoinO then button.semCoinO:Hide() end
+if button.weeklyFrost then button.weeklyFrost:Hide() end
+if button.weeklyChest then button.weeklyChest:Hide() end
+
+if not button.modeText then
+
 		button.modeText = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		button.modeText:SetPoint("LEFT", button, "LEFT", 280, 0)
 	end

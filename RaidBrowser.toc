@@ -1,10 +1,10 @@
+## Title: RaidBrowser - UltimoWoW
+## Author: ShadowniB
+## Version: 1.0 UW
+## Notes: Improved Raid Browser for UltimoWoW server
 ## Interface: 30300
-## Title: Raid Browser
-## Version: v1.0
-## Notes: A raid finder that parses chat channel text and displays any found raids in the raid browser LFR frame.
-## Author: ChadowniB
 ## SavedVariablesPerCharacter:RaidBrowserCharacterRaidsets, RaidBrowserCharacterCurrentRaidset, RaidBrowserReputationDB, RaidBrowserReputationOptions
-## OptionalDeps: GearScoreLite
+## OptionalDeps: GearScoreLite o GearScore + Bonus Scaner
 ## X-Embeds: Ace3
 ## SavedVariables: RaidBrowserClassCache
 
