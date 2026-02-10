@@ -1,0 +1,21 @@
+## Title: RaidBrowser - UltimoWoW
+## Author: ShadowniB
+## Version: 1.0 UW
+## Notes: Improved Raid Browser for UltimoWoW server
+## Interface: 30300
+## SavedVariablesPerCharacter:RaidBrowserCharacterRaidsets, RaidBrowserCharacterCurrentRaidset, RaidBrowserReputationDB, RaidBrowserReputationOptions
+## OptionalDeps: GearScoreLite o GearScore + Bonus Scaner
+## X-Embeds: Ace3
+## SavedVariables: RaidBrowserClassCache
+
+embeds.xml
+
+core.lua
+event.lua
+timer.lua
+stats.lua
+gui.lua
+raidset_frame.lua
+thumbsup.png
+thumbsdown.png
+
